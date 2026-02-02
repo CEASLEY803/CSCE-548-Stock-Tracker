@@ -43,13 +43,19 @@ This project demonstrates professional database design and implementation for a 
 ## Project Structure
 
 ```
-Stock_Tracker/
-├── schema.sql              # Database schema (5 tables)
-├── populate_data.sql       # Test data (62 rows)
-├── data_access_layer.py    # Python DAL with CRUD operations
-├── console_frontend.py     # Interactive console UI
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+CSCE-548-Stock-Tracker/
+├── sql/
+│   ├── schema.sql              # Database schema (5 tables)
+│   └── populate_data.sql       # Test data (62 rows)
+├── scripts/
+│   ├── setup_database.bat      # Windows database setup script
+│   └── create_pdf.py           # Screenshot PDF generator
+├── docs/
+│   └── Stock_Tracker_Screenshots.pdf  # Project screenshots
+├── data_access_layer.py        # Python DAL with CRUD operations
+├── console_frontend.py         # Interactive console UI
+├── requirements.txt            # Python dependencies
+└── README.md                   # This file
 ```
 
 ## Installation & Setup

@@ -20,7 +20,7 @@ echo Database created successfully!
 echo.
 
 echo Step 2: Importing schema...
-%MYSQL_PATH% -u root -p stock_tracker < schema.sql
+%MYSQL_PATH% -u root -p stock_tracker < ..\sql\schema.sql
 if errorlevel 1 (
     echo Error: Failed to import schema.
     pause
@@ -30,7 +30,7 @@ echo Schema imported successfully!
 echo.
 
 echo Step 3: Importing test data...
-%MYSQL_PATH% -u root -p stock_tracker < populate_data.sql
+%MYSQL_PATH% -u root -p stock_tracker < ..\sql\populate_data.sql
 if errorlevel 1 (
     echo Error: Failed to import data.
     pause
