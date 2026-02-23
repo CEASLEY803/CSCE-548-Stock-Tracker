@@ -1,0 +1,65 @@
+# Docker Compose configuration for Stock Portfolio Tracker
+# Complete stack: MySQL Database + REST API Service
+
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:9.6
+    container_name: stock_tracker_db
+    environment:
+      MYSQL_ROOT_PASSWORD: Stock2024!
+      MYSQL_DATABASE: stock_tracker
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./sql/populate_data.sql:/docker-entrypoint-initdb.d/2-data.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # REST API Service
+  api:
+    build: .
+    container_name: stock_tracker_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=Stock2024!
+      - DB_NAME=stock_tracker
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  mysql_data:
+
+# USAGE INSTRUCTIONS:
+# ===================
+# 1. Build and start all services:
+#    docker-compose up -d
+#
+# 2. View logs:
+#    docker-compose logs -f
+#
+# 3. Stop all services:
+#    docker-compose down
+#
+# 4. Stop and remove all data:
+#    docker-compose down -v
+#
+# 5. Access API Documentation:
+#    http://localhost:8000/docs

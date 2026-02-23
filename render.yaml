@@ -1,0 +1,31 @@
+# Render.com deployment configuration
+# This file tells Render how to deploy your API
+
+services:
+  # MySQL Database
+  - type: pserv
+    name: stock-tracker-db
+    env: docker
+    dockerfilePath: ./Dockerfile.mysql
+    plan: free
+
+  # REST API Service
+  - type: web
+    name: stock-tracker-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn service_layer:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DB_HOST
+        fromService:
+          name: stock-tracker-db
+          type: pserv
+          property: host
+      - key: DB_PASSWORD
+        generateValue: true
+      - key: DB_NAME
+        value: stock_tracker
