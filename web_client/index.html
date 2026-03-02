@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Portfolio Tracker - Web Client</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 2rem auto;
+            max-width: 1400px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .header .api-status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .entity-card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .record-count {
+            background: var(--success-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .action-buttons button {
+            margin-right: 0.3rem;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .alert-custom {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="bi bi-graph-up-arrow"></i> Stock Portfolio Tracker</h1>
+            <p class="mb-0">Web Client - Project 3 - CSCE 548</p>
+            <div class="api-status">
+                <span id="apiStatusBadge" class="badge bg-secondary">Checking connection...</span>
+                <span class="ms-2" id="apiUrl"></span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="p-4">
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button">
+                        <i class="bi bi-graph-up"></i> Stocks
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button">
+                        <i class="bi bi-people"></i> Users
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="portfolios-tab" data-bs-toggle="tab" data-bs-target="#portfolios" type="button">
+                        <i class="bi bi-briefcase"></i> Portfolios
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button">
+                        <i class="bi bi-arrow-left-right"></i> Transactions
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button">
+                        <i class="bi bi-eye"></i> Watchlist
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="mainTabContent">
+                <!-- Stocks Tab -->
+                <div class="tab-pane fade show active" id="stocks" role="tabpanel">
+                    <div class="card entity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Stocks Management</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateStockModal()">
+                                <i class="bi bi-plus-circle"></i> Add New Stock
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filter Options -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                        <input type="text" class="form-control" id="stockTickerSearch" placeholder="Search by ticker...">
+                                        <button class="btn btn-outline-secondary" onclick="searchStockByTicker()">Search</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-filter"></i></span>
+                                        <select class="form-select" id="sectorFilter" onchange="filterBySector()">
+                                            <option value="">All Sectors</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-primary w-100" onclick="loadStocks()">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Stocks Table -->
+                            <div id="stocksLoading" class="loading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Loading stocks...</p>
+                            </div>
+                            <div id="stocksContent" style="display: none;">
+                                <p class="text-muted">Total Stocks: <span class="record-count" id="stocksCount">0</span></p>
+                                <div class="table-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Ticker</th>
+                                                <th>Company</th>
+                                                <th>Price</th>
+                                                <th>Market Cap</th>
+                                                <th>Sector</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="stocksTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div class="tab-pane fade" id="users" role="tabpanel">
+                    <div class="card entity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-people"></i> Users Management</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateUserModal()">
+                                <i class="bi bi-plus-circle"></i> Add New User
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="usersLoading" class="loading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Loading users...</p>
+                            </div>
+                            <div id="usersContent" style="display: none;">
+                                <p class="text-muted">Total Users: <span class="record-count" id="usersCount">0</span></p>
+                                <div class="table-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Username</th>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Balance</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usersTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolios Tab -->
+                <div class="tab-pane fade" id="portfolios" role="tabpanel">
+                    <div class="card entity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-briefcase"></i> Portfolios Management</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showCreatePortfolioModal()">
+                                <i class="bi bi-plus-circle"></i> Add New Portfolio
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Filter by User:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <select class="form-select" id="portfolioUserFilter" onchange="filterPortfoliosByUser()">
+                                        <option value="">All Users</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="portfoliosLoading" class="loading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Loading portfolios...</p>
+                            </div>
+                            <div id="portfoliosContent" style="display: none;">
+                                <p class="text-muted">Total Portfolios: <span class="record-count" id="portfoliosCount">0</span></p>
+                                <div class="table-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>User ID</th>
+                                                <th>Portfolio Name</th>
+                                                <th>Total Value</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="portfoliosTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transactions Tab -->
+                <div class="tab-pane fade" id="transactions" role="tabpanel">
+                    <div class="card entity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-arrow-left-right"></i> Transactions Management</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateTransactionModal()">
+                                <i class="bi bi-plus-circle"></i> Add New Transaction
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Filter by User:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <select class="form-select" id="transactionUserFilter" onchange="filterTransactionsByUser()">
+                                            <option value="">All Users</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Filter by Stock:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-graph-up"></i></span>
+                                        <select class="form-select" id="transactionStockFilter" onchange="filterTransactionsByStock()">
+                                            <option value="">All Stocks</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="transactionsLoading" class="loading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Loading transactions...</p>
+                            </div>
+                            <div id="transactionsContent" style="display: none;">
+                                <p class="text-muted">Total Transactions: <span class="record-count" id="transactionsCount">0</span></p>
+                                <div class="table-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Type</th>
+                                                <th>User ID</th>
+                                                <th>Stock ID</th>
+                                                <th>Quantity</th>
+                                                <th>Price</th>
+                                                <th>Total</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactionsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Watchlist Tab -->
+                <div class="tab-pane fade" id="watchlist" role="tabpanel">
+                    <div class="card entity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-eye"></i> Watchlist Management</h5>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateWatchlistModal()">
+                                <i class="bi bi-plus-circle"></i> Add to Watchlist
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Filter by User:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <select class="form-select" id="watchlistUserFilter" onchange="filterWatchlistByUser()">
+                                        <option value="">All Users</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="watchlistLoading" class="loading">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2">Loading watchlist...</p>
+                            </div>
+                            <div id="watchlistContent" style="display: none;">
+                                <p class="text-muted">Total Items: <span class="record-count" id="watchlistCount">0</span></p>
+                                <div class="table-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>User ID</th>
+                                                <th>Stock ID</th>
+                                                <th>Target Price</th>
+                                                <th>Alert</th>
+                                                <th>Added</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="watchlistTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals will be inserted here by JavaScript -->
+    <div id="modalsContainer"></div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
