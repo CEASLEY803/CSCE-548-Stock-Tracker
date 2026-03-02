@@ -2,6 +2,21 @@
 Stock Portfolio Tracker - Service Layer (REST API)
 Exposes business layer functionality as REST API endpoints using FastAPI.
 
+LIVE DEPLOYMENT:
+================
+Platform: Railway.app
+Live API URL: https://csce-548-stock-tracker-production.up.railway.app
+API Documentation: https://csce-548-stock-tracker-production.up.railway.app/docs
+Alternative Docs: https://csce-548-stock-tracker-production.up.railway.app/redoc
+
+Deployment Steps Completed:
+1. Created Railway account and MySQL service
+2. Imported database schema (5 tables) and test data (62 rows)
+3. Deployed API service from GitHub repository
+4. Configured MYSQL_URL environment variable: ${{MySQL.MYSQL_URL}}
+5. Generated public domain for API access
+6. Service is live and accessible 24/7
+
 HOSTING INSTRUCTIONS:
 =====================
 Local Development:

@@ -18,12 +18,12 @@ from decimal import Decimal
 class StockTrackerAPIClient:
     """Client for interacting with Stock Portfolio Tracker REST API."""
 
-    def __init__(self, base_url="http://localhost:8000"):
+    def __init__(self, base_url="https://csce-548-stock-tracker-production.up.railway.app"):
         """
         Initialize API client.
 
         Args:
-            base_url: Base URL of the API server (default: http://localhost:8000)
+            base_url: Base URL of the API server (default: Railway production URL)
         """
         self.base_url = base_url
         self.api_v1 = f"{base_url}/api/v1"

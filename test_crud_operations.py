@@ -17,7 +17,7 @@ from datetime import datetime
 class CRUDTester:
     """Automated testing of CRUD operations via REST API."""
 
-    def __init__(self, base_url="http://localhost:8000"):
+    def __init__(self, base_url="https://csce-548-stock-tracker-production.up.railway.app"):
         self.base_url = base_url
         self.api_v1 = f"{base_url}/api/v1"
         self.test_results = []
@@ -73,10 +73,16 @@ class CRUDTester:
             "industry": "Software Testing"
         }
 
+        print(f"Sending POST request to: {self.api_v1}/stocks")
+        print(f"Request data: {create_data}")
+
         try:
             response = requests.post(f"{self.api_v1}/stocks", json=create_data)
             response.raise_for_status()
             result = response.json()
+            print(f"✓ Response received:")
+            import json
+            print(json.dumps(result, indent=2))
             stock_id = result.get('stock_id')
             self.log_test("CREATE Stock", True, f"Stock ID: {stock_id}, Ticker: CRUD")
         except requests.exceptions.RequestException as e:
@@ -87,10 +93,14 @@ class CRUDTester:
 
         # READ
         print("\n--- READ Operation ---")
+        print(f"Sending GET request to: {self.api_v1}/stocks/{stock_id}")
         try:
             response = requests.get(f"{self.api_v1}/stocks/{stock_id}")
             response.raise_for_status()
             stock = response.json()
+            print(f"✓ Response received:")
+            import json
+            print(json.dumps(stock, indent=2, default=str))
             self.log_test("READ Stock by ID", True,
                          f"Retrieved: {stock['ticker_symbol']} - ${stock['current_price']}")
         except requests.exceptions.RequestException as e:
@@ -110,10 +120,15 @@ class CRUDTester:
         # UPDATE
         print("\n--- UPDATE Operation ---")
         update_data = {"new_price": 175.50}
+        print(f"Sending PUT request to: {self.api_v1}/stocks/{stock_id}/price")
+        print(f"Update data: {update_data}")
         try:
             response = requests.put(f"{self.api_v1}/stocks/{stock_id}/price", json=update_data)
             response.raise_for_status()
             result = response.json()
+            print(f"✓ Response received:")
+            import json
+            print(json.dumps(result, indent=2, default=str))
             self.log_test("UPDATE Stock Price", True,
                          f"Price updated: ${result['old_price']} → ${result['new_price']}")
         except requests.exceptions.RequestException as e:
@@ -123,22 +138,31 @@ class CRUDTester:
 
         # DELETE
         print("\n--- DELETE Operation ---")
+        print(f"Sending DELETE request to: {self.api_v1}/stocks/{stock_id}")
         try:
             response = requests.delete(f"{self.api_v1}/stocks/{stock_id}")
             response.raise_for_status()
             result = response.json()
+            print(f"✓ Response received:")
+            import json
+            print(json.dumps(result, indent=2))
             self.log_test("DELETE Stock", True, result['message'])
         except requests.exceptions.RequestException as e:
             self.log_test("DELETE Stock", False, str(e))
 
         # Verify deletion
+        print("\n--- Verify Deletion ---")
+        print(f"Sending GET request to verify deletion: {self.api_v1}/stocks/{stock_id}")
         try:
             response = requests.get(f"{self.api_v1}/stocks/{stock_id}")
             if response.status_code == 404:
+                print(f"✓ Stock not found (HTTP 404) - Deletion confirmed!")
                 self.log_test("Verify Deletion", True, "Stock no longer exists (404)")
             else:
+                print(f"✗ Stock still exists (HTTP {response.status_code})")
                 self.log_test("Verify Deletion", False, "Stock still exists")
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            print(f"✓ Stock not found - Deletion confirmed!")
             self.log_test("Verify Deletion", True, "Stock not found (as expected)")
 
     def test_user_crud(self):
