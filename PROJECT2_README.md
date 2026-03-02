@@ -7,6 +7,17 @@
 
 ---
 
+## 🌐 Live Deployment
+
+**Platform:** Railway.app
+**Live API URL:** https://csce-548-stock-tracker-production.up.railway.app
+**API Documentation:** https://csce-548-stock-tracker-production.up.railway.app/docs
+**Database:** MySQL (hosted on Railway)
+
+**Status:** ✅ Live and fully operational
+
+---
+
 ## Project Overview
 
 This project extends Project 1 by implementing a complete **3-tier architecture**:
