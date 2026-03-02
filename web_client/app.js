@@ -540,9 +540,7 @@ async function deleteTransaction(transactionId) {
 async function loadWatchlist() {
     showLoading('watchlist');
     try {
-        // Note: This endpoint doesn't exist in the API, so we'll need to modify this
-        // For now, we'll load watchlist for user 1 as an example
-        const response = await fetch(`${API_V1}/users/1/watchlist`);
+        const response = await fetch(`${API_V1}/watchlist`);
         const data = await response.json();
         allWatchlist = data.watchlist || [];
 
@@ -550,9 +548,8 @@ async function loadWatchlist() {
         renderWatchlistTable(allWatchlist);
         hideLoading('watchlist');
     } catch (error) {
-        // If endpoint doesn't work, show empty state
+        showAlert('Error loading watchlist: ' + error.message, 'danger');
         hideLoading('watchlist');
-        document.getElementById('watchlistContent').innerHTML = '<p class="text-muted text-center">No watchlist data available</p>';
     }
 }
 

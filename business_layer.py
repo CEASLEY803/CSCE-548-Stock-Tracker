@@ -486,6 +486,11 @@ class WatchlistBusinessLogic:
         return WatchlistDAO.read_by_id(watchlist_id)
 
     @staticmethod
+    def get_all_watchlist() -> List[Dict]:
+        """Get all watchlist items."""
+        return WatchlistDAO.read_all()
+
+    @staticmethod
     def get_user_watchlist(user_id: int) -> List[Dict]:
         """Get user's complete watchlist."""
         return WatchlistDAO.find_by_user(user_id)

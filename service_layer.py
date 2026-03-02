@@ -501,6 +501,13 @@ async def add_to_watchlist(watchlist_item: WatchlistCreate):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.get("/api/v1/watchlist", tags=["Watchlist"])
+async def get_all_watchlist():
+    """Get all watchlist items."""
+    watchlist = WatchlistBusinessLogic.get_all_watchlist()
+    return {"watchlist": watchlist, "count": len(watchlist)}
+
+
 @app.get("/api/v1/users/{user_id}/watchlist", tags=["Watchlist"])
 async def get_user_watchlist(user_id: int):
     """Get user's complete watchlist."""
