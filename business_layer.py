@@ -393,11 +393,41 @@ class TransactionBusinessLogic:
             else:  # SELL
                 UserDAO.update(user_id, account_balance=user['account_balance'] + total_amount)
 
+            # Update portfolio total value
+            # Calculate portfolio value based on all transactions using current stock prices
+            portfolio_transactions = TransactionDAO.find_by_portfolio(portfolio_id)
+
+            # Track holdings: {stock_id: net_quantity}
+            holdings = {}
+            for txn in portfolio_transactions:
+                stock_id = txn['stock_id']
+                qty = txn['quantity']
+
+                if stock_id not in holdings:
+                    holdings[stock_id] = 0
+
+                if txn['transaction_type'] == 'BUY':
+                    holdings[stock_id] += qty
+                else:  # SELL
+                    holdings[stock_id] -= qty
+
+            # Calculate total value using current stock prices
+            portfolio_total = Decimal('0.00')
+            for stock_id, quantity in holdings.items():
+                if quantity > 0:  # Only count positive holdings
+                    stock_data = StockDAO.read_by_id(stock_id)
+                    if stock_data:
+                        portfolio_total += Decimal(str(quantity)) * stock_data['current_price']
+
+            # Update portfolio total value
+            PortfolioDAO.update(portfolio_id, total_value=portfolio_total)
+
             return {
                 'success': True,
                 'transaction_id': transaction_id,
                 'total_amount': float(total_amount),
                 'new_balance': float(user['account_balance'] + (total_amount if transaction_type == 'SELL' else -total_amount)),
+                'portfolio_value': float(portfolio_total),
                 'message': f'{transaction_type} transaction created successfully'
             }
         else:
@@ -425,6 +455,11 @@ class TransactionBusinessLogic:
     def get_stock_transactions(stock_id: int) -> List[Dict]:
         """Get all transactions for a stock."""
         return TransactionDAO.find_by_stock(stock_id)
+
+    @staticmethod
+    def get_portfolio_transactions(portfolio_id: int) -> List[Dict]:
+        """Get all transactions for a portfolio."""
+        return TransactionDAO.find_by_portfolio(portfolio_id)
 
     @staticmethod
     def delete_transaction(transaction_id: int) -> Dict:

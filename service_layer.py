@@ -471,6 +471,13 @@ async def get_stock_transactions(stock_id: int):
     return {"stock_id": stock_id, "transactions": transactions, "count": len(transactions)}
 
 
+@app.get("/api/v1/portfolios/{portfolio_id}/transactions", tags=["Transactions"])
+async def get_portfolio_transactions(portfolio_id: int):
+    """Get all transactions for a portfolio."""
+    transactions = TransactionBusinessLogic.get_portfolio_transactions(portfolio_id)
+    return {"portfolio_id": portfolio_id, "transactions": transactions, "count": len(transactions)}
+
+
 @app.delete("/api/v1/transactions/{transaction_id}", tags=["Transactions"])
 async def delete_transaction(transaction_id: int):
     """Delete a transaction."""

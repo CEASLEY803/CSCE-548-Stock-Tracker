@@ -708,34 +708,573 @@ function populateTransactionFilters() {
     });
 }
 
-// ==================== CREATE FUNCTIONS (Placeholders for modals) ====================
+// ==================== CREATE FUNCTIONS ====================
 
 function showCreateStockModal() {
-    showAlert('Create Stock modal - to be implemented', 'info');
+    const modalContent = `
+        <form id="createStockForm">
+            <div class="mb-3">
+                <label class="form-label">Ticker Symbol *</label>
+                <input type="text" class="form-control" id="stockTicker" required maxlength="10" placeholder="e.g., AAPL">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Company Name *</label>
+                <input type="text" class="form-control" id="stockCompany" required maxlength="100" placeholder="e.g., Apple Inc.">
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Current Price * ($)</label>
+                    <input type="number" class="form-control" id="stockPrice" required step="0.01" min="0.01" placeholder="0.00">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Market Cap *</label>
+                    <input type="number" class="form-control" id="stockMarketCap" required min="1" placeholder="1000000000">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Sector *</label>
+                    <select class="form-control" id="stockSector" required>
+                        <option value="">Select Sector</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Industrial">Industrial</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Industry</label>
+                    <input type="text" class="form-control" id="stockIndustry" maxlength="50" placeholder="Optional">
+                </div>
+            </div>
+        </form>
+    `;
+
+    const modal = createModal('Create New Stock', modalContent,
+        '<button type="button" class="btn btn-primary" onclick="submitCreateStock()">Create Stock</button>');
+    showModal(modal);
+}
+
+async function submitCreateStock() {
+    const stockData = {
+        ticker_symbol: document.getElementById('stockTicker').value.trim().toUpperCase(),
+        company_name: document.getElementById('stockCompany').value.trim(),
+        current_price: parseFloat(document.getElementById('stockPrice').value),
+        market_cap: parseInt(document.getElementById('stockMarketCap').value),
+        sector: document.getElementById('stockSector').value,
+        industry: document.getElementById('stockIndustry').value.trim() || null
+    };
+
+    if (!stockData.ticker_symbol || !stockData.company_name || !stockData.current_price || !stockData.market_cap || !stockData.sector) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/stocks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(stockData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('Stock created successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadStocks();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to create stock'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error creating stock: ' + error.message, 'danger');
+    }
 }
 
 function showCreateUserModal() {
-    showAlert('Create User modal - to be implemented', 'info');
+    const modalContent = `
+        <form id="createUserForm">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Username *</label>
+                    <input type="text" class="form-control" id="userUsername" required minlength="3" maxlength="50">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="userEmail" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" class="form-control" id="userFirstName" required maxlength="50">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" class="form-control" id="userLastName" required maxlength="50">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password *</label>
+                    <input type="password" class="form-control" id="userPassword" required minlength="8">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Initial Balance ($)</label>
+                    <input type="number" class="form-control" id="userBalance" step="0.01" min="0" value="10000.00">
+                </div>
+            </div>
+        </form>
+    `;
+
+    const modal = createModal('Create New User', modalContent,
+        '<button type="button" class="btn btn-primary" onclick="submitCreateUser()">Create User</button>');
+    showModal(modal);
+}
+
+async function submitCreateUser() {
+    const userData = {
+        username: document.getElementById('userUsername').value.trim(),
+        email: document.getElementById('userEmail').value.trim(),
+        password: document.getElementById('userPassword').value,
+        first_name: document.getElementById('userFirstName').value.trim(),
+        last_name: document.getElementById('userLastName').value.trim(),
+        initial_balance: parseFloat(document.getElementById('userBalance').value) || 10000.00
+    };
+
+    if (!userData.username || !userData.email || !userData.password || !userData.first_name || !userData.last_name) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    if (userData.password.length < 8) {
+        showAlert('Password must be at least 8 characters', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('User created successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadUsers();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to create user'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error creating user: ' + error.message, 'danger');
+    }
 }
 
 function showCreatePortfolioModal() {
-    showAlert('Create Portfolio modal - to be implemented', 'info');
+    const modalContent = `
+        <form id="createPortfolioForm">
+            <div class="mb-3">
+                <label class="form-label">User *</label>
+                <select class="form-control" id="portfolioUserId" required>
+                    <option value="">Select User</option>
+                    ${allUsers.map(u => `<option value="${u.user_id}">${u.username} (ID: ${u.user_id})</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Portfolio Name *</label>
+                <input type="text" class="form-control" id="portfolioName" required maxlength="100" placeholder="e.g., Growth Portfolio">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="portfolioDescription" rows="3" placeholder="Optional description"></textarea>
+            </div>
+        </form>
+    `;
+
+    const modal = createModal('Create New Portfolio', modalContent,
+        '<button type="button" class="btn btn-primary" onclick="submitCreatePortfolio()">Create Portfolio</button>');
+    showModal(modal);
+}
+
+async function submitCreatePortfolio() {
+    const portfolioData = {
+        user_id: parseInt(document.getElementById('portfolioUserId').value),
+        portfolio_name: document.getElementById('portfolioName').value.trim(),
+        description: document.getElementById('portfolioDescription').value.trim() || null
+    };
+
+    if (!portfolioData.user_id || !portfolioData.portfolio_name) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/portfolios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(portfolioData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('Portfolio created successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadPortfolios();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to create portfolio'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error creating portfolio: ' + error.message, 'danger');
+    }
 }
 
 function showCreateTransactionModal() {
-    showAlert('Create Transaction modal - to be implemented', 'info');
+    const modalContent = `
+        <form id="createTransactionForm">
+            <div class="mb-3">
+                <label class="form-label">User *</label>
+                <select class="form-control" id="txnUserId" required onchange="filterPortfoliosBySelectedUser()">
+                    <option value="">Select User</option>
+                    ${allUsers.map(u => `<option value="${u.user_id}">${u.username} (Balance: $${u.account_balance})</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Portfolio *</label>
+                <select class="form-control" id="txnPortfolioId" required disabled>
+                    <option value="">Select a user first</option>
+                </select>
+                <small class="text-muted">Select a user to see their portfolios</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Stock *</label>
+                <select class="form-control" id="txnStockId" required onchange="updateTransactionPrice()">
+                    <option value="">Select Stock</option>
+                    ${allStocks.map(s => `<option value="${s.stock_id}" data-price="${s.current_price}">${s.ticker_symbol} - ${s.company_name} ($${parseFloat(s.current_price).toFixed(2)})</option>`).join('')}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Type *</label>
+                    <select class="form-control" id="txnType" required>
+                        <option value="">Select Type</option>
+                        <option value="BUY">BUY</option>
+                        <option value="SELL">SELL</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Quantity *</label>
+                    <input type="number" class="form-control" id="txnQuantity" required min="1" placeholder="10" onchange="calculateTransactionTotal()">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Price/Share * ($)</label>
+                    <input type="number" class="form-control" id="txnPrice" required step="0.01" min="0.01" placeholder="0.00" onchange="calculateTransactionTotal()">
+                    <small class="text-muted">Auto-filled from stock price</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="alert alert-info" role="alert">
+                    <strong>Total Amount:</strong> $<span id="txnTotalAmount">0.00</span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" id="txnNotes" rows="2" placeholder="Optional notes"></textarea>
+            </div>
+        </form>
+    `;
+
+    const modal = createModal('Create New Transaction', modalContent,
+        '<button type="button" class="btn btn-primary" onclick="submitCreateTransaction()">Create Transaction</button>');
+    showModal(modal);
+}
+
+// Helper function to filter portfolios when user is selected
+function filterPortfoliosBySelectedUser() {
+    const userId = parseInt(document.getElementById('txnUserId').value);
+    const portfolioSelect = document.getElementById('txnPortfolioId');
+
+    if (!userId) {
+        portfolioSelect.disabled = true;
+        portfolioSelect.innerHTML = '<option value="">Select a user first</option>';
+        return;
+    }
+
+    // Filter portfolios for the selected user
+    const userPortfolios = allPortfolios.filter(p => p.user_id === userId);
+
+    portfolioSelect.disabled = false;
+    if (userPortfolios.length === 0) {
+        portfolioSelect.innerHTML = '<option value="">No portfolios found for this user</option>';
+    } else {
+        portfolioSelect.innerHTML = '<option value="">Select Portfolio</option>' +
+            userPortfolios.map(p => `<option value="${p.portfolio_id}">${p.portfolio_name}</option>`).join('');
+    }
+}
+
+// Helper function to auto-populate price when stock is selected
+function updateTransactionPrice() {
+    const stockSelect = document.getElementById('txnStockId');
+    const priceInput = document.getElementById('txnPrice');
+
+    if (stockSelect.value) {
+        const selectedOption = stockSelect.options[stockSelect.selectedIndex];
+        const price = selectedOption.getAttribute('data-price');
+        priceInput.value = parseFloat(price).toFixed(2);
+        calculateTransactionTotal();
+    }
+}
+
+// Helper function to calculate and display total amount
+function calculateTransactionTotal() {
+    const quantity = parseInt(document.getElementById('txnQuantity').value) || 0;
+    const price = parseFloat(document.getElementById('txnPrice').value) || 0;
+    const total = quantity * price;
+
+    const totalDisplay = document.getElementById('txnTotalAmount');
+    if (totalDisplay) {
+        totalDisplay.textContent = total.toFixed(2);
+    }
+}
+
+async function submitCreateTransaction() {
+    const txnData = {
+        user_id: parseInt(document.getElementById('txnUserId').value),
+        stock_id: parseInt(document.getElementById('txnStockId').value),
+        portfolio_id: parseInt(document.getElementById('txnPortfolioId').value),
+        transaction_type: document.getElementById('txnType').value,
+        quantity: parseInt(document.getElementById('txnQuantity').value),
+        price_per_share: parseFloat(document.getElementById('txnPrice').value),
+        notes: document.getElementById('txnNotes').value.trim() || null
+    };
+
+    if (!txnData.user_id || !txnData.stock_id || !txnData.portfolio_id || !txnData.transaction_type || !txnData.quantity || !txnData.price_per_share) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/transactions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(txnData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('Transaction created successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadTransactions();
+            await loadUsers(); // Refresh to show updated balance
+            await loadPortfolios(); // Refresh to show updated portfolio value
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to create transaction'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error creating transaction: ' + error.message, 'danger');
+    }
 }
 
 function showCreateWatchlistModal() {
-    showAlert('Create Watchlist modal - to be implemented', 'info');
+    const modalContent = `
+        <form id="createWatchlistForm">
+            <div class="mb-3">
+                <label class="form-label">User *</label>
+                <select class="form-control" id="watchlistUserId" required>
+                    <option value="">Select User</option>
+                    ${allUsers.map(u => `<option value="${u.user_id}">${u.username} (ID: ${u.user_id})</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Stock *</label>
+                <select class="form-control" id="watchlistStockId" required>
+                    <option value="">Select Stock</option>
+                    ${allStocks.map(s => `<option value="${s.stock_id}">${s.ticker_symbol} - ${s.company_name} ($${s.current_price})</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Target Price ($)</label>
+                <input type="number" class="form-control" id="watchlistTargetPrice" step="0.01" min="0.01" placeholder="Optional">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" id="watchlistNotes" rows="2" placeholder="Optional notes"></textarea>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="watchlistAlert">
+                <label class="form-check-label" for="watchlistAlert">
+                    Enable Price Alert
+                </label>
+            </div>
+        </form>
+    `;
+
+    const modal = createModal('Add to Watchlist', modalContent,
+        '<button type="button" class="btn btn-primary" onclick="submitCreateWatchlist()">Add to Watchlist</button>');
+    showModal(modal);
 }
 
-function editStock(stockId) {
-    showAlert('Edit Stock modal - to be implemented', 'info');
+async function submitCreateWatchlist() {
+    const targetPrice = document.getElementById('watchlistTargetPrice').value;
+    const watchlistData = {
+        user_id: parseInt(document.getElementById('watchlistUserId').value),
+        stock_id: parseInt(document.getElementById('watchlistStockId').value),
+        target_price: targetPrice ? parseFloat(targetPrice) : null,
+        notes: document.getElementById('watchlistNotes').value.trim() || null,
+        alert_enabled: document.getElementById('watchlistAlert').checked
+    };
+
+    if (!watchlistData.user_id || !watchlistData.stock_id) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/watchlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(watchlistData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('Item added to watchlist successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadWatchlist();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to add to watchlist'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error adding to watchlist: ' + error.message, 'danger');
+    }
 }
 
-function editUserBalance(userId) {
-    showAlert('Edit User Balance modal - to be implemented', 'info');
+// ==================== UPDATE FUNCTIONS ====================
+
+async function editStock(stockId) {
+    try {
+        const response = await fetch(`${API_V1}/stocks/${stockId}`);
+        const stock = await response.json();
+
+        const modalContent = `
+            <form id="editStockForm">
+                <div class="mb-3">
+                    <label class="form-label">Current Price: $${stock.current_price}</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">New Price * ($)</label>
+                    <input type="number" class="form-control" id="editStockPrice" required step="0.01" min="0.01"
+                           value="${stock.current_price}" placeholder="0.00">
+                </div>
+                <p class="text-muted small">This will update the stock price for ${stock.ticker_symbol} - ${stock.company_name}</p>
+            </form>
+        `;
+
+        const modal = createModal('Update Stock Price', modalContent,
+            `<button type="button" class="btn btn-warning" onclick="submitEditStock(${stockId})">Update Price</button>`);
+        showModal(modal);
+    } catch (error) {
+        showAlert('Error loading stock: ' + error.message, 'danger');
+    }
+}
+
+async function submitEditStock(stockId) {
+    const newPrice = parseFloat(document.getElementById('editStockPrice').value);
+
+    if (!newPrice || newPrice <= 0) {
+        showAlert('Please enter a valid price', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/stocks/${stockId}/price`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_price: newPrice })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('Stock price updated successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadStocks();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to update price'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error updating stock price: ' + error.message, 'danger');
+    }
+}
+
+async function editUserBalance(userId) {
+    try {
+        const response = await fetch(`${API_V1}/users/${userId}`);
+        const user = await response.json();
+
+        const modalContent = `
+            <form id="editBalanceForm">
+                <div class="mb-3">
+                    <label class="form-label">Current Balance: $${user.account_balance}</label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Operation *</label>
+                    <select class="form-control" id="balanceOperation" required>
+                        <option value="add">Add Funds</option>
+                        <option value="subtract">Subtract Funds</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount * ($)</label>
+                    <input type="number" class="form-control" id="balanceAmount" required step="0.01" min="0.01" placeholder="0.00">
+                </div>
+                <p class="text-muted small">This will ${userId}'s account balance for ${user.username}</p>
+            </form>
+        `;
+
+        const modal = createModal('Update User Balance', modalContent,
+            `<button type="button" class="btn btn-warning" onclick="submitEditBalance(${userId})">Update Balance</button>`);
+        showModal(modal);
+    } catch (error) {
+        showAlert('Error loading user: ' + error.message, 'danger');
+    }
+}
+
+async function submitEditBalance(userId) {
+    const amount = parseFloat(document.getElementById('balanceAmount').value);
+    const operation = document.getElementById('balanceOperation').value;
+
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid amount', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_V1}/users/${userId}/balance`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amount, operation: operation })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showAlert('User balance updated successfully!', 'success');
+            bootstrap.Modal.getInstance(document.querySelector('.modal')).hide();
+            await loadUsers();
+        } else {
+            showAlert('Error: ' + (result.message || result.detail || 'Failed to update balance'), 'danger');
+        }
+    } catch (error) {
+        showAlert('Error updating balance: ' + error.message, 'danger');
+    }
 }
 
 console.log('App.js loaded successfully');

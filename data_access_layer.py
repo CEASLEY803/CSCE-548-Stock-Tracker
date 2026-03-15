@@ -651,6 +651,27 @@ class TransactionDAO:
             print(f"✗ Error finding transactions: {e}")
             return []
 
+    @staticmethod
+    def find_by_portfolio(portfolio_id: int) -> List[Dict]:
+        """Find all transactions for a specific portfolio."""
+        query = """
+            SELECT t.*
+            FROM Transactions t
+            WHERE t.portfolio_id = %s
+            ORDER BY t.transaction_date DESC
+        """
+        try:
+            conn = DatabaseConnection.get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(query, (portfolio_id,))
+            transactions = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return transactions
+        except Error as e:
+            print(f"✗ Error finding transactions: {e}")
+            return []
+
 
 class WatchlistDAO:
     """Data Access Object for Watchlists table - Full CRUD operations."""
