@@ -316,6 +316,20 @@ CSCE-548-Stock-Tracker/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 💬 Getting Help
+
+If you encounter issues or have questions:
+
+1. **Check the Documentation:**
+   - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Setup and troubleshooting
+   - [API Documentation](https://csce-548-stock-tracker-production.up.railway.app/docs) - Interactive API docs
+
+2. **Report Issues:**
+   - [GitHub Issues](https://github.com/CEASLEY803/CSCE-548-Stock-Tracker/issues) - Bug reports and feature requests
+
+3. **Test the Live Demo:**
+   - [Web Application](https://ceasley803.github.io/CSCE-548-Stock-Tracker/web_client/) - Try it before deploying
+
 ## 👤 Author
 
 **[Your Name]**
