@@ -334,7 +334,7 @@ If you encounter issues or have questions:
 
 **Cole Easley**
 - GitHub: [@CEASLEY803](https://github.com/CEASLEY803)
-- Email: [your.email@example.com]
+- Email: [CAEasley@email.sc.edu]
 
 ## 🙏 Acknowledgments
 
