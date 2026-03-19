@@ -309,7 +309,7 @@ CSCE-548-Stock-Tracker/
 
 - **Course:** CSCE 548 - Software Engineering
 - **Project:** Complete N-Tier Application (Projects 1-4)
-- **Institution:** [University Name]
+- **Institution:** University of South Carolina
 - **Semester:** Spring 2026
 
 ## 📄 License
@@ -332,7 +332,7 @@ If you encounter issues or have questions:
 
 ## 👤 Author
 
-**[Your Name]**
+**Cole Easley**
 - GitHub: [@CEASLEY803](https://github.com/CEASLEY803)
 - Email: [your.email@example.com]
 
